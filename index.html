@@ -1,0 +1,427 @@
+<title>Crosscheck</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a two-voice news desk. Verified press (blue) on one side, X trends (orange) on the other, with the gap between them as the headline. */
+:root {
+  --bg: #F2F5F8;
+  --surface: #FFFFFF;
+  --ink: #13202D;
+  --muted: #586878;
+  --line: #D5DDE6;
+  --press: #1B4B8F;
+  --press-soft: #E4ECF7;
+  --x: #C2410C;
+  --x-soft: #FDEBE1;
+  --ok: #1F7A48;
+  --warn: #8A5B00;
+  --bad: #B42318;
+  --font-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --font-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --font-data: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0E1620; --surface: #15202C; --ink: #E8EEF4; --muted: #93A3B4; --line: #26364A;
+    --press: #86B4F0; --press-soft: #172A44; --x: #FF8A5B; --x-soft: #3A1F14;
+    --ok: #5FCB8E; --warn: #E3B341; --bad: #FF7B72; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0E1620; --surface: #15202C; --ink: #E8EEF4; --muted: #93A3B4; --line: #26364A;
+  --press: #86B4F0; --press-soft: #172A44; --x: #FF8A5B; --x-soft: #3A1F14;
+  --ok: #5FCB8E; --warn: #E3B341; --bad: #FF7B72; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink);
+  font-family: var(--font-body); font-size: 16px; line-height: 1.55;
+  padding-block: 0 48px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.wrap { max-width: 1040px; margin: 0 auto; }
+a { color: inherit; }
+:focus-visible { outline: 3px solid var(--press); outline-offset: 2px; border-radius: 4px; }
+h1, h2, h3 { font-family: var(--font-display); line-height: 1.15; text-wrap: balance; margin: 0; }
+.mono { font-family: var(--font-data); font-variant-numeric: tabular-nums; }
+
+.mast { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 24px; padding-block: 24px 14px; border-bottom: 2px solid var(--ink); }
+.brand { font-family: var(--font-display); font-weight: 700; font-size: 2rem; letter-spacing: -0.02em; text-decoration: none; display: flex; align-items: center; gap: 10px; }
+.brand .mark { display: inline-flex; width: 30px; height: 22px; }
+.nav { display: flex; gap: 20px; font-weight: 500; }
+.nav a { text-decoration: none; padding: 4px 0; border-bottom: 2px solid transparent; color: var(--muted); }
+.nav a[aria-current="page"] { color: var(--ink); border-color: var(--ink); }
+.date { font-family: var(--font-data); font-size: 0.8rem; color: var(--muted); width: 100%; }
+
+.demo { margin-top: 14px; padding: 10px 14px; background: var(--x-soft); color: var(--ink); border-left: 4px solid var(--x); font-size: 0.9rem; }
+
+.view { padding-top: 28px; display: grid; gap: 28px; }
+.lede { max-width: 62ch; }
+.lede h1 { font-size: clamp(1.8rem, 5vw, 2.8rem); margin-bottom: 10px; }
+.lede p { color: var(--muted); margin: 0; }
+.legend { display: flex; flex-wrap: wrap; gap: 8px 20px; font-size: 0.85rem; color: var(--muted); }
+.key { display: inline-flex; align-items: center; gap: 8px; }
+.sw { width: 14px; height: 14px; border-radius: 3px; display: inline-block; }
+.sw.p { background: var(--press); } .sw.x { background: var(--x); }
+
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { font: inherit; font-size: 0.85rem; padding: 6px 12px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 999px; cursor: pointer; }
+.chip[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+
+.board { display: grid; gap: 12px; }
+.row { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 16px 28px; padding: 18px; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; text-decoration: none; }
+.row:hover { border-color: var(--ink); }
+.row h2 { font-size: 1.2rem; margin: 6px 0 8px; }
+.cat { font-family: var(--font-data); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+.row p { margin: 0; color: var(--muted); font-size: 0.92rem; }
+.bars { display: grid; gap: 10px; align-content: center; }
+.bar { display: grid; gap: 4px; font-size: 0.8rem; }
+.bar .lab { display: flex; justify-content: space-between; gap: 8px; color: var(--muted); }
+.bar .lab b { color: var(--ink); font-weight: 500; }
+.track { height: 10px; background: var(--bg); border-radius: 2px; overflow: hidden; }
+.fill { height: 100%; }
+.fill.p { background: var(--press); } .fill.x { background: var(--x); }
+
+.pill { display: inline-block; font-size: 0.75rem; font-weight: 600; padding: 2px 9px; border-radius: 999px; border: 1px solid currentColor; white-space: nowrap; }
+.pill.aligned { color: var(--ok); } .pill.thin { color: var(--bad); } .pill.quiet { color: var(--warn); } .pill.dev { color: var(--muted); }
+.pill.confirmed { color: var(--ok); } .pill.unconfirmed { color: var(--warn); } .pill.contradicted { color: var(--bad); }
+
+.back { font-size: 0.9rem; color: var(--muted); }
+.story-head { display: grid; gap: 12px; max-width: 70ch; }
+.story-head h1 { font-size: clamp(1.7rem, 4.5vw, 2.5rem); }
+.story-head p { margin: 0; color: var(--muted); }
+.split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 20px; min-width: 0; }
+.panel.p { border-top: 4px solid var(--press); } .panel.x { border-top: 4px solid var(--x); }
+.panel h2 { font-size: 1.15rem; margin-bottom: 4px; }
+.panel .sub { color: var(--muted); font-size: 0.85rem; margin: 0 0 14px; }
+.cov { list-style: none; margin: 0; padding: 0; display: grid; }
+.cov li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; padding: 9px 0; border-top: 1px solid var(--line); align-items: center; }
+.cov li small { display: block; color: var(--muted); font-size: 0.78rem; }
+.cov .t { font-family: var(--font-data); font-size: 0.85rem; text-align: right; }
+.cov .none { color: var(--muted); }
+.big { display: flex; flex-wrap: wrap; gap: 4px 28px; margin-bottom: 8px; }
+.big div { display: grid; }
+.big .n { font-family: var(--font-display); font-weight: 700; font-size: 2.2rem; line-height: 1.1; color: var(--x); }
+.big .l { font-size: 0.78rem; color: var(--muted); }
+.spark { width: 100%; height: auto; display: block; }
+.verdict { padding: 16px 20px; border-left: 4px solid var(--ink); background: var(--surface); border-radius: 0 6px 6px 0; }
+.verdict h3 { font-size: 1rem; margin-bottom: 4px; }
+.verdict p { margin: 0; }
+.claims { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; }
+.claims li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; padding: 12px 0; border-top: 1px solid var(--line); align-items: start; }
+.claims small { display: block; color: var(--muted); font-size: 0.8rem; }
+
+.src-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+.src { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 14px 16px; }
+.src h3 { font-size: 1rem; }
+.src p { margin: 4px 0 0; color: var(--muted); font-size: 0.85rem; }
+.rules { display: grid; gap: 14px; max-width: 68ch; }
+.rules h2 { font-size: 1.3rem; }
+.rules ul { margin: 0; padding-left: 20px; display: grid; gap: 8px; }
+.foot { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--line); color: var(--muted); font-size: 0.82rem; max-width: 70ch; }
+
+@media (max-width: 760px) {
+  .row, .split { grid-template-columns: minmax(0, 1fr); }
+  .brand { font-size: 1.6rem; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .row { transition: border-color 0.15s; }
+}
+</style>
+
+<div class="wrap">
+  <header class="mast">
+    <a class="brand" href="#today" aria-label="Crosscheck home">
+      <svg class="mark" viewBox="0 0 30 22" aria-hidden="true"><rect x="0" y="2" width="16" height="18" rx="2" fill="var(--press)"/><rect x="14" y="2" width="16" height="18" rx="2" fill="var(--x)" opacity="0.9"/></svg>
+      Crosscheck
+    </a>
+    <nav class="nav" aria-label="Main">
+      <a href="#today" id="nav-today">Today</a>
+      <a href="#sources" id="nav-sources">Sources &amp; method</a>
+    </nav>
+    <div class="date" id="today-date"></div>
+  </header>
+  <div class="demo" id="banner"><strong>Demo data.</strong> Stories, source names and X figures on this page are placeholders that show how the platform will work. They are not real reports.</div>
+  <main id="app"></main>
+  <footer class="foot">Crosscheck compares what verified newsrooms have reported with what is trending on X, and says where the two disagree. Connecting live feeds needs a small server, because a static page cannot call the X API or news feeds directly.</footer>
+</div>
+
+<script>
+var SOURCES = [
+  { name: "Wire service A", type: "Wire", note: "International news agency, text and photo desk" },
+  { name: "Wire service B", type: "Wire", note: "Second independent agency with its own reporters" },
+  { name: "Public broadcaster A", type: "Broadcaster", note: "Publicly funded, editorial charter published" },
+  { name: "Public broadcaster B", type: "Broadcaster", note: "Publicly funded, regional language services" },
+  { name: "National daily", type: "Newspaper", note: "Print and digital, public corrections log" },
+  { name: "Business daily", type: "Newspaper", note: "Markets and policy focus" },
+  { name: "Regional paper (Africa)", type: "Newspaper", note: "On-the-ground reporting for the region" },
+  { name: "Fact-check desk", type: "Verification", note: "Checks viral claims, publishes methodology" }
+];
+
+function series(peak, spike, base, spread) {
+  var out = [];
+  for (var h = 0; h < 24; h++) {
+    var d = h - peak, s = d < 0 ? spread * 0.6 : spread;
+    var v = base + spike * Math.exp(-Math.abs(d) / s) + base * 0.15 * Math.sin(h * 1.7);
+    out.push(Math.max(1, Math.round(v)));
+  }
+  return out;
+}
+
+var STORIES = [
+  { id: "1", cat: "Economy", headline: "Central bank holds benchmark rate and hints at a cut next quarter",
+    summary: "The monetary committee kept the rate unchanged and said easing could follow if inflation keeps slowing.",
+    first: "09:14", reported: [[0,0],[1,6],[2,22],[4,35],[5,12],[6,58],[7,95]],
+    x: { rank: 6, posts: 186, s: series(11, 140, 20, 3), peak: "11:00" },
+    claims: [
+      { t: "The rate was left unchanged", st: "confirmed", n: "Reported by 7 sources, matches the bank's statement" },
+      { t: "A cut is guaranteed in Q1", st: "contradicted", n: "The statement says a cut is possible, not promised" },
+      { t: "Two committee members voted to raise the rate", st: "unconfirmed", n: "Only seen in posts so far" }
+    ] },
+  { id: "2", cat: "Health", headline: "Health ministry reports measles outbreak across three districts",
+    summary: "Officials confirmed 41 cases and opened vaccination points in schools and markets.",
+    first: "07:40", reported: [[2,0],[3,18],[4,40],[6,25],[7,70]],
+    x: { rank: 41, posts: 22, s: series(9, 12, 6, 4), peak: "09:00" },
+    claims: [
+      { t: "41 confirmed cases in three districts", st: "confirmed", n: "Ministry figures, reported by 5 sources" },
+      { t: "Schools are closed statewide", st: "contradicted", n: "Only schools in affected districts are paused" }
+    ] },
+  { id: "3", cat: "World", headline: "Viral clip of an airport evacuation spreads online",
+    summary: "A 40-second video shows crowds leaving a terminal. Location and date are disputed.",
+    first: "13:05", reported: [[7,0]],
+    x: { rank: 1, posts: 520, s: series(14, 420, 30, 2.5), peak: "14:00" },
+    claims: [
+      { t: "The clip was filmed today", st: "contradicted", n: "Fact-check desk traced it to an earlier drill" },
+      { t: "Dozens of people were injured", st: "unconfirmed", n: "No source has confirmed any injuries" },
+      { t: "It was a scheduled evacuation drill", st: "confirmed", n: "Airport operator statement, 1 source so far" }
+    ] },
+  { id: "4", cat: "Politics", headline: "Senate committee advances electoral reform bill",
+    summary: "The bill moves to a floor vote after a 9 to 4 committee decision.",
+    first: "16:20", reported: [[0,0],[1,9],[2,30],[4,41],[5,64],[6,80]],
+    x: { rank: 12, posts: 64, s: series(17, 45, 12, 3), peak: "17:00" },
+    claims: [
+      { t: "The committee vote was 9 to 4", st: "confirmed", n: "Reported by 6 sources" },
+      { t: "The bill removes term limits", st: "contradicted", n: "The text does not change term limits" }
+    ] },
+  { id: "5", cat: "Sport", headline: "Club confirms signing of 21-year-old forward",
+    summary: "The club announced a five-year contract. The transfer fee was not disclosed.",
+    first: "18:02", reported: [[2,0],[4,25],[6,70]],
+    x: { rank: 2, posts: 340, s: series(19, 260, 25, 3), peak: "19:00" },
+    claims: [
+      { t: "The player signed a five-year contract", st: "confirmed", n: "Club statement, reported by 3 sources" },
+      { t: "The fee is 60 million euros", st: "unconfirmed", n: "Figure appears only in posts" }
+    ] },
+  { id: "6", cat: "Climate", headline: "Flood warnings issued along river basin as rainfall continues",
+    summary: "The meteorological agency raised the alert level for two river basins through the weekend.",
+    first: "06:30", reported: [[3,0],[6,45]],
+    x: { rank: 58, posts: 31, s: series(8, 20, 8, 4), peak: "08:00" },
+    claims: [
+      { t: "Alert level raised for two basins", st: "confirmed", n: "Agency bulletin, 2 sources" },
+      { t: "A dam has already failed", st: "unconfirmed", n: "No report or official notice" }
+    ] }
+];
+
+var GAPS = {
+  nox: { label: "Press only", cls: "dev", text: function (s) { return s.reported.length + " of " + SOURCES.length + " tracked sources have reported this. X is not connected yet, so there is no trend data to compare."; } },
+  aligned: { label: "Aligned", cls: "aligned", text: function (s) { return "Press and X are covering this at a similar level. " + s.reported.length + " of " + SOURCES.length + " tracked sources have reported it, and X volume is steady with it."; } },
+  thin: { label: "Trending, thinly sourced", cls: "thin", text: function (s) { return "X is far ahead of the newsrooms. Only " + s.reported.length + " of " + SOURCES.length + " tracked sources have reported this, so treat unconfirmed claims below as rumor until more sources confirm."; } },
+  quiet: { label: "Under-discussed on X", cls: "quiet", text: function (s) { return "Newsrooms have covered this (" + s.reported.length + " of " + SOURCES.length + " sources) but X is quiet. Worth surfacing to people who rely on social feeds."; } },
+  dev: { label: "Developing", cls: "dev", text: function (s) { return "Early coverage from " + s.reported.length + " of " + SOURCES.length + " sources and low X volume. Check back as more outlets report."; } }
+};
+
+function needSrc() { return Math.ceil(SOURCES.length / 2); }
+
+function gapOf(s) {
+  var p = s.reported.length, x = s.x ? s.x.posts : null;
+  if (x === null) return "nox";
+  if (p >= needSrc() && x < 40) return "quiet";
+  if (p >= needSrc()) return "aligned";
+  if (x >= 150) return "thin";
+  return "dev";
+}
+var XMAX = 520, XONLY = [], LIVE = false;
+function prep() {
+  STORIES.forEach(function (s) { s.gap = gapOf(s); });
+  XMAX = Math.max(100, Math.max.apply(null, STORIES.map(function (s) { return s.x ? s.x.posts : 0; })));
+}
+prep();
+
+var filter = "all";
+
+function pct(n, max) { return Math.min(100, Math.round(n / max * 100)); }
+function fmtK(n) { return n >= 1000 ? (n / 1000).toFixed(1) + "M" : n + "K"; }
+function addMin(hhmm, m) {
+  var a = hhmm.split(":"), t = (+a[0]) * 60 + (+a[1]) + m;
+  return String(Math.floor(t / 60) % 24).padStart(2, "0") + ":" + String(t % 60).padStart(2, "0");
+}
+
+function sparkline(vals, peakLabel) {
+  var w = 460, h = 130, pad = 8, max = Math.max.apply(null, vals);
+  var pts = vals.map(function (v, i) { return [pad + i * (w - pad * 2) / (vals.length - 1), h - 18 - (v / max) * (h - 34)]; });
+  var line = pts.map(function (p, i) { return (i ? "L" : "M") + p[0].toFixed(1) + " " + p[1].toFixed(1); }).join(" ");
+  var area = line + " L" + pts[pts.length - 1][0].toFixed(1) + " " + (h - 18) + " L" + pts[0][0].toFixed(1) + " " + (h - 18) + " Z";
+  var mi = vals.indexOf(max), mp = pts[mi];
+  var lx = Math.min(w - 70, Math.max(pad, mp[0] - 30));
+  return '<svg class="spark" viewBox="0 0 ' + w + ' ' + h + '" role="img" aria-label="Posts per hour over 24 hours, peak at ' + peakLabel + '">' +
+    '<line x1="' + pad + '" y1="' + (h - 18) + '" x2="' + (w - pad) + '" y2="' + (h - 18) + '" stroke="var(--line)"/>' +
+    '<path d="' + area + '" fill="var(--x)" fill-opacity="0.15"/>' +
+    '<path d="' + line + '" fill="none" stroke="var(--x)" stroke-width="2.5" stroke-linejoin="round"/>' +
+    '<circle cx="' + mp[0].toFixed(1) + '" cy="' + mp[1].toFixed(1) + '" r="4.5" fill="var(--x)"/>' +
+    '<text x="' + lx.toFixed(1) + '" y="' + Math.max(12, mp[1] - 9).toFixed(1) + '" font-size="12" fill="var(--ink)" font-family="IBM Plex Mono, monospace">peak ' + peakLabel + '</text>' +
+    '<text x="' + pad + '" y="' + (h - 3) + '" font-size="11" fill="var(--muted)" font-family="IBM Plex Mono, monospace">24h ago</text>' +
+    '<text x="' + (w - pad) + '" y="' + (h - 3) + '" font-size="11" text-anchor="end" fill="var(--muted)" font-family="IBM Plex Mono, monospace">now</text>' +
+    '</svg>';
+}
+
+function xBar(s) {
+  if (!s.x) return '<div class="bar"><div class="lab"><span>X trend</span><b class="mono">Not connected</b></div><div class="track"></div></div>';
+  if (s.x.rank === null) return '<div class="bar"><div class="lab"><span>X trend</span><b class="mono">Not in trends</b></div><div class="track"></div></div>';
+  return '<div class="bar"><div class="lab"><span>X trend, #' + s.x.rank + '</span><b class="mono">' + fmtK(s.x.posts) + ' posts</b></div><div class="track"><div class="fill x" style="width:' + pct(s.x.posts, XMAX) + '%"></div></div></div>';
+}
+
+function xOnlyHtml() {
+  if (!XONLY.length || filter !== "all") return "";
+  var rows = XONLY.map(function (t) {
+    return '<li><div>' + t.trend + '<small>X trend #' + t.rank + '</small></div><span class="t">' + fmtK(t.posts) + ' posts</span></li>';
+  }).join("");
+  return '<section class="panel x"><h2>Trending on X with no matching newsroom story</h2>' +
+    '<p class="sub">These trends did not match any report from the tracked sources in the last 24 hours. Matching is by keywords, so some may be covered under different wording.</p>' +
+    '<ul class="cov">' + rows + '</ul></section>';
+}
+
+function xPanel(s) {
+  if (!s.x) return '<section class="panel x"><h2>On X</h2><p class="sub">X is not connected, so trend volume is not available.</p></section>';
+  if (s.x.rank === null) return '<section class="panel x"><h2>On X</h2><p class="sub">No trend on X matched this story.</p></section>';
+  return '<section class="panel x"><h2>On X</h2><p class="sub">' + (s.x.s ? 'Posts per hour over the last 24 hours.' : 'Matched trend: ' + s.x.trend) + '</p>' +
+    '<div class="big"><div><span class="n">#' + s.x.rank + '</span><span class="l">in trends</span></div><div><span class="n">' + fmtK(s.x.posts) + '</span><span class="l">posts</span></div></div>' +
+    (s.x.s ? sparkline(s.x.s, s.x.peak) : '') + '</section>';
+}
+
+function viewToday() {
+  var chips = [["all", "All stories"], ["aligned", "Aligned"], ["thin", "Trending, thinly sourced"], ["quiet", "Under-discussed on X"], ["dev", "Developing"]];
+  var list = STORIES.filter(function (s) { return filter === "all" || s.gap === filter; });
+  var rows = list.map(function (s) {
+    var g = GAPS[s.gap];
+    return '<a class="row" href="#story-' + s.id + '">' +
+      '<div><span class="cat">' + s.cat + '</span><h2>' + s.headline + '</h2><p>' + s.summary + '</p></div>' +
+      '<div class="bars">' +
+      '<div class="bar"><div class="lab"><span>Verified press</span><b class="mono">' + s.reported.length + ' of ' + SOURCES.length + ' sources</b></div><div class="track"><div class="fill p" style="width:' + pct(s.reported.length, SOURCES.length) + '%"></div></div></div>' +
+      xBar(s) +
+      '<div><span class="pill ' + g.cls + '">' + g.label + '</span></div>' +
+      '</div></a>';
+  }).join("");
+  return '<div class="view">' +
+    '<div class="lede"><h1>What the newsrooms report, and what X is shouting about</h1>' +
+    '<p>Each story is scored on two things: how many trusted sources have reported it, and how much it is trending on X. The gap tells you where to be careful.</p></div>' +
+    '<div class="legend"><span class="key"><span class="sw p"></span>Verified press coverage</span><span class="key"><span class="sw x"></span>X trend volume</span></div>' +
+    '<div class="chips" role="group" aria-label="Filter by gap">' + chips.map(function (c) {
+      return '<button class="chip" type="button" data-f="' + c[0] + '" aria-pressed="' + (filter === c[0]) + '">' + c[1] + '</button>';
+    }).join("") + '</div>' +
+    '<div class="board">' + (rows || '<p>No stories match this filter.</p>') + '</div>' + xOnlyHtml() + '</div>';
+}
+
+function viewStory(id) {
+  var s = STORIES.filter(function (x) { return x.id === id; })[0];
+  if (!s) return viewToday();
+  var g = GAPS[s.gap];
+  var got = {};
+  s.reported.forEach(function (r) { got[r[0]] = r[1]; });
+  var cov = SOURCES.map(function (src, i) {
+    var has = got.hasOwnProperty(i);
+    var nm = s.links && s.links[i] ? '<a href="' + s.links[i] + '" target="_blank" rel="noopener noreferrer">' + src.name + '</a>' : src.name;
+    return '<li><div>' + nm + '<small>' + src.type + '</small></div>' +
+      (has ? '<span class="t">' + addMin(s.first, got[i]) + '</span>' : '<span class="t none">Not yet</span>') + '</li>';
+  }).join("");
+  var claims = s.claims.map(function (c) {
+    return '<li><div>' + c.t + '<small>' + c.n + '</small></div><span class="pill ' + c.st + '">' + c.st.charAt(0).toUpperCase() + c.st.slice(1) + '</span></li>';
+  }).join("");
+  return '<div class="view">' +
+    '<a class="back" href="#today">&larr; All stories</a>' +
+    '<div class="story-head"><span class="cat">' + s.cat + '</span><h1>' + s.headline + '</h1><p>' + s.summary + '</p><div><span class="pill ' + g.cls + '">' + g.label + '</span></div></div>' +
+    '<div class="verdict"><h3>The gap</h3><p>' + g.text(s) + '</p></div>' +
+    '<div class="split">' +
+    '<section class="panel p"><h2>Verified press</h2><p class="sub">First report at ' + s.first + '. Times show when each source published.</p><ul class="cov">' + cov + '</ul></section>' +
+    xPanel(s) + '</div>' +
+    (s.claims.length ? '<section class="panel"><h2>Claims going around</h2><p class="sub">Each claim is checked against what the sources reported.</p><ul class="claims">' + claims + '</ul></section>' : '') +
+    '</div>';
+}
+
+function viewSources() {
+  var src = SOURCES.map(function (s) { return '<div class="src"><h3>' + s.name + '</h3><p class="mono">' + s.type + '</p><p>' + s.note + '</p></div>'; }).join("");
+  return '<div class="view">' +
+    '<div class="lede"><h1>Sources and method</h1><p>' + (LIVE ? 'These are the outlets Crosscheck reads. The list lives in sources.json, so you can add or remove outlets there.' : 'The roster below shows the kinds of outlets Crosscheck tracks. Real outlet names replace these labels when live feeds are connected.') + '</p></div>' +
+    '<div class="src-grid">' + src + '</div>' +
+    '<div class="rules"><h2>How a story is scored</h2><ul>' +
+    '<li><strong>Press coverage</strong> counts how many of the ' + SOURCES.length + ' tracked sources have published their own report. Rewrites of another outlet do not count twice.</li>' +
+    '<li><strong>X volume</strong> is the number of posts about the story in the last 24 hours, taken from the platform trends list.</li>' +
+    '<li><strong>Aligned</strong> means ' + needSrc() + ' or more sources and steady X volume. <strong>Trending, thinly sourced</strong> means under ' + needSrc() + ' sources but 150K or more posts. <strong>Under-discussed on X</strong> means ' + needSrc() + ' or more sources and under 40K posts.</li>' +
+    '<li><strong>Confirmed</strong> claims match what at least one tracked source reported. <strong>Contradicted</strong> claims conflict with a source or the fact-check desk. <strong>Unconfirmed</strong> claims appear only on X.</li></ul>' +
+    '<h2>What trust means here</h2><ul>' +
+    '<li>Every tracked source publishes its corrections and ownership.</li>' +
+    '<li>Scores are shown with their inputs, so readers can disagree with them.</li>' +
+    '<li>Crosscheck never ranks a story as true because it is popular.</li></ul></div></div>';
+}
+
+function render() {
+  var h = (location.hash || "#today").slice(1), app = document.getElementById("app"), html;
+  if (h.indexOf("story-") === 0) html = viewStory(h.slice(6));
+  else if (h === "sources") html = viewSources();
+  else html = viewToday();
+  app.innerHTML = html;
+  document.getElementById("nav-today").setAttribute("aria-current", h === "sources" ? "false" : "page");
+  document.getElementById("nav-sources").setAttribute("aria-current", h === "sources" ? "page" : "false");
+  window.scrollTo(0, 0);
+}
+
+document.getElementById("app").addEventListener("click", function (e) {
+  var b = e.target.closest ? e.target.closest("[data-f]") : null;
+  if (b) {
+    filter = b.getAttribute("data-f");
+    var y = window.scrollY;
+    document.getElementById("app").innerHTML = viewToday();
+    window.scrollTo(0, y);
+  }
+});
+window.addEventListener("hashchange", render);
+document.getElementById("today-date").textContent = new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" }) + " · sample board";
+function clean(v) {
+  return String(v == null ? "" : v).replace(/[&<>"']/g, function (c) {
+    return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+  });
+}
+function safeUrl(u) { return /^https?:\/\//i.test(u || "") ? clean(u) : ""; }
+
+function loadLive(d) {
+  if (!d || !d.sources || !d.sources.length || !d.stories) return;
+  SOURCES = d.sources.map(function (s) { return { name: clean(s.name), type: clean(s.type), note: clean(s.note) }; });
+  STORIES = d.stories.map(function (s) {
+    var links = {};
+    Object.keys(s.links || {}).forEach(function (k) { var u = safeUrl(s.links[k]); if (u) links[k] = u; });
+    var first = new Date(s.firstAt);
+    return {
+      id: clean(s.id).replace(/[^a-z0-9-]/gi, ""), cat: clean(s.cat), headline: clean(s.headline), summary: clean(s.summary),
+      first: first.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" }),
+      reported: (s.reported || []).map(function (r) { return [+r[0], +r[1]]; }), links: links,
+      x: s.x ? { rank: s.x.rank == null ? null : +s.x.rank, posts: +s.x.posts || 0, trend: clean(s.x.trend), s: null, peak: "" } : null,
+      claims: []
+    };
+  });
+  XONLY = (d.xOnly || []).map(function (t) { return { trend: clean(t.trend), posts: +t.posts || 0, rank: +t.rank }; });
+  LIVE = true;
+  prep();
+  var when = new Date(d.generatedAt).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+  document.getElementById("banner").innerHTML = "<strong>Live data.</strong> Updated " + when + ". " +
+    (d.xConnected ? "X trends: " + clean(d.xLabel || "") + "." : "X is not connected yet, so only press coverage is shown.");
+  document.getElementById("today-date").textContent = new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+}
+
+render();
+if (window.fetch) {
+  fetch("data.json", { cache: "no-store" })
+    .then(function (r) { return r.ok ? r.json() : Promise.reject(); })
+    .then(function (d) { loadLive(d); render(); })
+    .catch(function () {});
+}
+</script>

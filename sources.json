@@ -1,0 +1,16 @@
+{
+  "windowHours": 24,
+  "maxStories": 30,
+  "x": {
+    "woeid": 1,
+    "label": "Worldwide",
+    "note": "Use 23424908 for Nigeria. Needs the X_BEARER_TOKEN secret."
+  },
+  "sources": [
+    { "name": "BBC News", "type": "Broadcaster", "note": "Named as a trusted brand in Reuters Institute surveys for both the UK and Nigeria", "rss": "https://feeds.bbci.co.uk/news/world/rss.xml" },
+    { "name": "Channels TV", "type": "Broadcaster", "note": "Named as a credible, largely independent Nigerian brand", "rss": "https://www.channelstv.com/feed/" },
+    { "name": "The Punch", "type": "Newspaper", "note": "Named as a credible, largely independent Nigerian brand", "rss": "https://punchng.com/feed/" },
+    { "name": "Financial Times", "type": "Newspaper", "note": "Named among the most trusted UK news brands", "rss": "https://www.ft.com/rss/home" },
+    { "name": "Premium Times", "type": "Newspaper", "note": "Nigerian daily known for investigative reporting, listed as a key source by Nigerians", "rss": "https://www.premiumtimesng.com/feed" }
+  ]
+}
